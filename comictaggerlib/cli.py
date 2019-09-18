@@ -227,8 +227,7 @@ def process_file_cli(filename, opts, settings, match_results):
 
     ca = ComicArchive(
         filename,
-        settings.rar_exe_path,
-        ComicTaggerSettings.getGraphic('nocover.png'))
+        settings.rar_exe_path)
 
     if not os.path.lexists(filename):
         print("Cannot find " + filename, file=sys.stderr)

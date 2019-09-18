@@ -21,27 +21,23 @@ import shutil
 import tempfile
 import requests
 
-try:
-    from PyQt5.QtNetwork import QNetworkAccessManager, QNetworkRequest
-    from PyQt5.QtCore import QUrl, pyqtSignal, QObject, QByteArray
-    from PyQt5 import QtGui
-except ImportError:
-    # No Qt, so define a few dummy QObjects to help us compile
-    class QObject():
 
-        def __init__(self, *args):
-            pass
+# No Qt, so define a few dummy QObjects to help us compile
+class QObject():
 
-    class QByteArray():
+    def __init__(self, *args):
         pass
 
-    class pyqtSignal():
+class QByteArray():
+    pass
 
-        def __init__(self, *args):
-            pass
+class pyqtSignal():
 
-        def emit(a, b, c):
-            pass
+    def __init__(self, *args):
+        pass
+
+    def emit(a, b, c):
+        pass
 
 from .settings import ComicTaggerSettings
 from . import ctversion

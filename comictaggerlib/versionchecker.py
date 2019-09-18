@@ -20,23 +20,19 @@ import requests
 import urllib.parse
 #import os
 
-try:
-    from PyQt5.QtNetwork import QNetworkAccessManager, QNetworkRequest, QNetworkReply
-    from PyQt5.QtCore import QUrl, pyqtSignal, QObject, QByteArray
-except ImportError:
-    # No Qt, so define a few dummy QObjects to help us compile
-    class QObject():
+# No Qt, so define a few dummy QObjects to help us compile
+class QObject():
 
-        def __init__(self, *args):
-            pass
+    def __init__(self, *args):
+        pass
 
-    class pyqtSignal():
+class pyqtSignal():
 
-        def __init__(self, *args):
-            pass
+    def __init__(self, *args):
+        pass
 
-        def emit(a, b, c):
-            pass
+    def emit(a, b, c):
+        pass
 
 from . import ctversion
 

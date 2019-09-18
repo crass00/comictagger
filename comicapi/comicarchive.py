@@ -643,12 +643,6 @@ class ComicArchive:
                 self.archive_type = self.ArchiveType.Pdf
                 self.archiver = PdfArchiver(self.path)
 
-        if ComicArchive.logo_data is None:
-            #fname = ComicTaggerSettings.getGraphic('nocover.png')
-            fname = self.default_image_path
-            with open(fname, 'rb') as fd:
-                ComicArchive.logo_data = fd.read()
-
     def resetCache(self):
         """Clears the cached data"""
 

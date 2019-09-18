@@ -26,23 +26,20 @@ import ssl
 
 from bs4 import BeautifulSoup
 
-try:
-    from PyQt5.QtNetwork import QNetworkAccessManager, QNetworkRequest
-    from PyQt5.QtCore import QUrl, pyqtSignal, QObject, QByteArray
-except ImportError:
-    # No Qt, so define a few dummy QObjects to help us compile
-    class QObject():
 
-        def __init__(self, *args):
-            pass
+# No Qt, so define a few dummy QObjects to help us compile
+class QObject():
 
-    class pyqtSignal():
+    def __init__(self, *args):
+        pass
 
-        def __init__(self, *args):
-            pass
+class pyqtSignal():
 
-        def emit(a, b, c):
-            pass
+    def __init__(self, *args):
+        pass
+
+    def emit(a, b, c):
+        pass
 
 from . import ctversion
 from . import utils
