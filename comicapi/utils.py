@@ -750,14 +750,14 @@ DC_Comics = ImprintDict("DC Comics", {
     "zuda": "Zuda Comics",
 })
 
-Dark_Horse_Comics = ImprintDisct("Dark Horse Comics", {
+Dark_Horse_Comics = ImprintDict("Dark Horse Comics", {
     "dark horse comics": "",    
     "dark horse books": "Dark Horse Books",
     "dark horse manga": "Dark Horse Manga",
     "maverick": "Maverick",
 })
 
-Dynamite_Entertainment = ImprintDisct("Dynamite Entertainment", {
+Dynamite_Entertainment = ImprintDict("Dynamite Entertainment", {
     "dynamite entertainment":"",
     "dynamite": "Dynamite",
     "chaos! comics": "Chaos! Comics",
