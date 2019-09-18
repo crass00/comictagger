@@ -750,4 +750,17 @@ DC_Comics = ImprintDict("DC Comics", {
     "zuda": "Zuda Comics",
 })
 
-publishers = [Marvel, DC_Comics]
+Dark_Horse_Comics = ImprintDisct("Dark Horse Comics", {
+    "dark horse comics": "",    
+    "dark horse books": "Dark Horse Books",
+    "dark horse manga": "Dark Horse Manga",
+    "maverick": "Maverick",
+})
+
+Dynamite_Entertainment = ImprintDisct("Dynamite Entertainment", {
+    "dynamite entertainment":"",
+    "dynamite": "Dynamite",
+    "chaos! comics": "Chaos! Comics",
+})
+
+publishers = [Marvel, DC_Comics, Dark_Horse_Comics, Dynamite_Entertainment]
