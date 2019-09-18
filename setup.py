@@ -166,7 +166,6 @@ class customInstall(setuptools.command.install.install):
 setup(name="comictagger",
       install_requires=required,
       cmdclass={
-        'build_unrar': BuildUnrarCommand,
         'build_py': BuildPyCommand,
         'install': customInstall,
         },
