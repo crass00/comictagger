@@ -145,33 +145,10 @@ def postInstall(scripts_folder):
             os.symlink(sys.executable, mac_python_link) 
 """
 
-class BuildUnrarCommand(Command):
-    description = 'build unrar library' 
-    user_options = []
-
-    def initialize_options(self):
-        pass
-    def finalize_options(self):
-        pass
-
-    def run(self):
-        try: 
-            if not os.path.exists("comictaggerlib/libunrar.so"):
-                if not os.path.exists("unrar/libunrar.so"):
-                   print("Building C++ unrar library....")
-                   subprocess.call(['make', '-C', 'unrar', 'lib'])
-                print("Copying .so file to comictaggerlib folder")
-                shutil.copyfile("unrar/libunrar.so", "comictaggerlib/libunrar.so")
-        except Exception as e:
-            print(e)
-            print("WARNING ----  Unrar library build/deploy failed.  User will have to self-install libunrar.")
-       
-       
 class BuildPyCommand(setuptools.command.build_py.build_py):
   """Custom build command."""
 
   def run(self):
-    self.run_command('build_unrar')
     setuptools.command.build_py.build_py.run(self)
             
 class customInstall(setuptools.command.install.install):
