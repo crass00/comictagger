@@ -30,7 +30,7 @@ import io
 
 from natsort import natsorted
 from PyPDF2 import PdfFileReader
-from rarfile
+import rarfile
 
 try:
     import Image
