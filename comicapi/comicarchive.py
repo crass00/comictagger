@@ -24,12 +24,8 @@ import platform
 import ctypes
 import time
 import io
-#import io
-#import locale
-#import shutil
 
 from natsort import natsorted
-import rarfile
 
 try:
     import Image
@@ -251,230 +247,6 @@ class ZipArchiver:
 
 #------------------------------------------
 
-class RarArchiver:
-
-    """RAR implementation"""
-
-    devnull = None
-
-    def __init__(self, path, rar_exe_path):
-        self.path = path
-        self.rar_exe_path = rar_exe_path
-
-        if RarArchiver.devnull is None:
-            RarArchiver.devnull = open(os.devnull, "w")
-
-        # windows only, keeps the cmd.exe from popping up
-        if platform.system() == "Windows":
-            self.startupinfo = subprocess.STARTUPINFO()
-            self.startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
-        else:
-            self.startupinfo = None
-
-    def __del__(self):
-        # RarArchiver.devnull.close()
-        pass
-
-    def getArchiveComment(self):
-        rarc = self.getRARObj()
-        return rarc.comment
-
-    def setArchiveComment(self, comment):
-        if self.rar_exe_path is not None:
-            try:
-                # write comment to temp file
-                tmp_fd, tmp_name = tempfile.mkstemp()
-                f = os.fdopen(tmp_fd, 'w+')
-                f.write(comment)
-                f.close()
-
-                working_dir = os.path.dirname(os.path.abspath(self.path))
-                
-                # use external program to write comment to Rar archive
-                proc_args = [self.rar_exe_path,
-                                 'c',
-                                 '-w' + working_dir,
-                                 '-c-',
-                                 '-z' + tmp_name,
-                                 self.path]
-                subprocess.call(proc_args,
-                                startupinfo=self.startupinfo,
-                                stdout=RarArchiver.devnull,
-                                stdin=RarArchiver.devnull,
-                                stderr=RarArchiver.devnull)
-
-                if platform.system() == "Darwin":
-                    time.sleep(1)
-                os.remove(tmp_name)
-            except Exception as e:
-                print(e)
-                return False
-            else:
-                return True
-        else:
-            return False
-
-    def readArchiveFile(self, archive_file):
-
-        # Make sure to escape brackets, since some funky stuff is going on
-        # underneath with "fnmatch"
-        #archive_file = archive_file.replace("[", '[[]')
-        entries = []
-
-        rarc = self.getRARObj()
-
-        tries = 0
-        while tries < 7:
-            try:
-                tries = tries + 1
-                #tmp_folder = tempfile.mkdtemp()
-                #tmp_file = os.path.join(tmp_folder, archive_file)
-                #rarc.extract(archive_file, tmp_folder)
-                data = rarc.open(archive_file).read()
-                #data = open(tmp_file).read()
-                entries = [(rarc.getinfo(archive_file), data)]
-
-                #shutil.rmtree(tmp_folder, ignore_errors=True)
-
-                #entries = rarc.read_files( archive_file )
-
-                if entries[0][0].file_size != len(entries[0][1]):
-                    print("readArchiveFile(): [file is not expected size: {0} vs {1}]  {2}:{3} [attempt # {4}]".format(
-                        entries[0][0].file_size, len(
-                            entries[0][1]), self.path, archive_file, tries), file=sys.stderr)
-                    continue
-
-            except (OSError, IOError) as e:
-                print("readArchiveFile(): [{0}]  {1}:{2} attempt#{3}".format(
-                    str(e), self.path, archive_file, tries), file=sys.stderr)
-                time.sleep(1)
-            except Exception as e:
-                print("Unexpected exception in readArchiveFile(): [{0}] for {1}:{2} attempt#{3}".format(
-                    str(e), self.path, archive_file, tries), file=sys.stderr)
-                break
-
-            else:
-                # Success"
-                # entries is a list of of tuples:  ( rarinfo, filedata)
-                if tries > 1:
-                    print("Attempted read_files() {0} times".format(
-                        tries), file=sys.stderr)
-                if (len(entries) == 1):
-                    return entries[0][1]
-                else:
-                    raise IOError
-
-        raise IOError
-
-    def writeArchiveFile(self, archive_file, data):
-
-        if self.rar_exe_path is not None:
-            try:
-                tmp_folder = tempfile.mkdtemp()
-
-                tmp_file = os.path.join(tmp_folder, archive_file)
-
-                working_dir = os.path.dirname(os.path.abspath(self.path))
-
-                # TODO: will this break if 'archive_file' is in a subfolder. i.e. "foo/bar.txt"
-                # will need to create the subfolder above, I guess...
-                f = open(tmp_file, 'w')
-                f.write(data)
-                f.close()
-
-                # use external program to write file to Rar archive
-                subprocess.call([self.rar_exe_path,
-                                 'a',
-                                 '-w' + working_dir,
-                                 '-c-',
-                                 '-ep',
-                                 self.path,
-                                 tmp_file],
-                                startupinfo=self.startupinfo,
-                                stdout=RarArchiver.devnull,
-                                stdin=RarArchiver.devnull,
-                                stderr=RarArchiver.devnull)
-
-                if platform.system() == "Darwin":
-                    time.sleep(1)
-                os.remove(tmp_file)
-                os.rmdir(tmp_folder)
-            except:
-                return False
-            else:
-                return True
-        else:
-            return False
-
-    def removeArchiveFile(self, archive_file):
-        if self.rar_exe_path is not None:
-            try:
-                # use external program to remove file from Rar archive
-                subprocess.call([self.rar_exe_path,
-                                 'd',
-                                 '-c-',
-                                 self.path,
-                                 archive_file],
-                                startupinfo=self.startupinfo,
-                                stdout=RarArchiver.devnull,
-                                stdin=RarArchiver.devnull,
-                                stderr=RarArchiver.devnull)
-
-                if platform.system() == "Darwin":
-                    time.sleep(1)
-            except:
-                return False
-            else:
-                return True
-        else:
-            return False
-
-    def getArchiveFilenameList(self):
-
-        rarc = self.getRARObj()
-        #namelist = [ item.filename for item in rarc.infolist() ]
-        # return namelist
-
-        tries = 0
-        while tries < 7:
-            try:
-                tries = tries + 1
-                #namelist = [ item.filename for item in rarc.infolist() ]
-                namelist = []
-                for item in rarc.infolist():
-                    if item.file_size != 0:
-                        namelist.append(item.filename)
-
-            except (OSError, IOError) as e:
-                print("getArchiveFilenameList(): [{0}] {1} attempt#{2}".format(
-                    str(e), self.path, tries), file=sys.stderr)
-                time.sleep(1)
-
-            else:
-                # Success"
-                return namelist
-
-        raise e
-
-    def getRARObj(self):
-        tries = 0
-        while tries < 7:
-            try:
-                tries = tries + 1
-                rarc = rarfile.RarFile( self.path )
-
-            except (OSError, IOError) as e:
-                print("getRARObj(): [{0}] {1} attempt#{2}".format(
-                    str(e), self.path, tries), file=sys.stderr)
-                time.sleep(1)
-
-            else:
-                # Success"
-                return rarc
-
-        raise e
-
-
 class FolderArchiver:
 
     """Folder implementation"""
@@ -572,12 +344,11 @@ class ComicArchive:
     logo_data = None
 
     class ArchiveType:
-        Zip, Rar, Folder, Pdf, Unknown = list(range(5))
+        Zip, Folder, Unknown = list(range(3))
 
-    def __init__(self, path, rar_exe_path=None, default_image_path=None):
+    def __init__(self, path, default_image_path=None):
         self.path = path
 
-        self.rar_exe_path = rar_exe_path
         self.ci_xml_filename = 'ComicInfo.xml'
         self.comet_default_filename = 'CoMet.xml'
         self.resetCache()
@@ -588,27 +359,10 @@ class ComicArchive:
 
         self.archive_type = self.ArchiveType.Unknown
         self.archiver = UnknownArchiver(self.path)
-
-        if ext == ".cbr" or ext == ".rar":
-            if self.rarTest():
-                self.archive_type = self.ArchiveType.Rar
-                self.archiver = RarArchiver(
-                    self.path,
-                    rar_exe_path=self.rar_exe_path)
-
-            elif self.zipTest():
-                self.archive_type = self.ArchiveType.Zip
-                self.archiver = ZipArchiver(self.path)
-        else:
-            if self.zipTest():
-                self.archive_type = self.ArchiveType.Zip
-                self.archiver = ZipArchiver(self.path)
-
-            elif self.rarTest():
-                self.archive_type = self.ArchiveType.Rar
-                self.archiver = RarArchiver(
-                    self.path,
-                    rar_exe_path=self.rar_exe_path)
+    
+        self.zipTest()
+        self.archive_type = self.ArchiveType.Zip
+        self.archiver = ZipArchiver(self.path)
 
     def resetCache(self):
         """Clears the cached data"""
@@ -634,28 +388,14 @@ class ComicArchive:
     def zipTest(self):
         return zipfile.is_zipfile(self.path)
 
-    def rarTest(self):
-        try:
-            rarc = rarfile.RarFile(self.path)
-        except:  # InvalidRARArchive:
-            return False
-        else:
-            return True
-
     def isZip(self):
         return self.archive_type == self.ArchiveType.Zip
-
-    def isRar(self):
-        return self.archive_type == self.ArchiveType.Rar
 
     def isFolder(self):
         return self.archive_type == self.ArchiveType.Folder
 
-    def isWritable(self, check_rar_status=True):
+    def isWritable(self):
         if self.archive_type == self.ArchiveType.Unknown:
-            return False
-
-        elif check_rar_status and self.isRar() and not self.rar_exe_path:
             return False
 
         elif not os.access(self.path, os.W_OK):
@@ -668,10 +408,6 @@ class ComicArchive:
         return True
 
     def isWritableForStyle(self, data_style):
-
-        if self.isRar() and data_style == MetaDataStyle.CBI:
-            return False
-
         return self.isWritable()
 
     def seemsToBeAComicArchive(self):
@@ -681,7 +417,7 @@ class ComicArchive:
 
         if (
             # or self.isFolder() )
-            (self.isZip() or self.isRar())
+            (self.isZip())
             and
             (self.getNumberOfPages() > 0)
 
