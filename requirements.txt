@@ -1,4 +1,5 @@
 beautifulsoup4 >= 4.1
-natsort>=6.0.0
+natsort 
 pillow>=4.3.0
 pathvalidate
+requests
